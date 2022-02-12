@@ -13,12 +13,13 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import Character from '../components/Character';
-// import { SearchIcon, CloseIcon } from "@chakra-ui/icons";
+import { SearchIcon, CloseIcon } from "@chakra-ui/icons";
 
 export default function Home(results) {
   const intialState = results;
   const [characters, setCharacters] = useState(intialState.characters);
-  console.log(characters)
+  const [search, setSearch] = useState("");
+  const toast = useToast();
   return (
     <Flex direction="column" justify="center" align="center">
       <Head>
@@ -31,6 +32,54 @@ export default function Home(results) {
         <Heading as="h1" size="2xl" mb={8}>
           Rick and Morty{" "}
         </Heading>
+        <form
+          onSubmit={async (event) => {
+            event.preventDefault();
+            const results = await fetch("/api/SearchCharacters", {
+              method: "post",
+              body: search,
+            });
+            const { characters, error } = await results.json();
+            if (error) {
+              toast({
+                position: "bottom",
+                title: "An error occurred.",
+                description: error,
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+              });
+            } else {
+              setCharacters(characters);
+            }
+          }}
+        >
+          <Stack maxWidth="350px" width="100%" isInline mb={8}>
+            <Input
+              placeholder="Search"
+              value={search}
+              border="none"
+              onChange={(e) => setSearch(e.target.value)}
+            ></Input>
+            <IconButton
+              colorScheme="blue"
+              aria-label="Search database"
+              icon={<SearchIcon />}
+              disabled={search === ""}
+              type="submit"
+            />
+            <IconButton
+              colorScheme="red"
+              aria-label="Reset "
+              icon={<CloseIcon />}
+              disabled={search === ""}
+              onClick={async () => {
+                setSearch("");
+                setCharacters(intialState.characters);
+              }}
+            />
+          </Stack>
+        </form>
         <Character characters={characters} />
       </Box>
 
